@@ -1,0 +1,3 @@
+(
+(:NAME "LU1" :TYPE (MU) :LOCATION "1st ICS, 6 cun lateral, 1 cun inferior LU2"  :DANGER ("pleura" "lung") :INDICATIONS (:EFFECTIVE ("cough" "dyspnea") :GENERAL ("chest pain" "throat" "swelling face")) :CONTRAINDICATIONS () :RATING 8 :FREQ 1 :COMMENT "")
+)
