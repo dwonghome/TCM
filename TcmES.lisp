@@ -1,16 +1,3 @@
-(defun hello-world ()
-  (format t "hello, world"))
-
-(defun test (x)
-  (list (hello-world) x))
-
-(defun make-cd (title artist rating ripped)
-  (list :title title :artist artist :rating rating :ripped ripped))
-
-(defvar *db* nil)
-
-(defun add-record (cd) (push cd *db*))
-
 (defun dump-db (db)
   (dolist (cd db)
     (format t "~{~a:~10t~a~%~}~%" cd)))
@@ -23,6 +10,7 @@
 (defun add-herb (herb) (push herb *herb-db*))
 
 
+(defvar *herb-formula-db* nil)
 (defun make-herb-formula (name indications contraindications ingredients instruction reference rating freq comment)
   (list :name name :indications indications :contraindications contraindications
 	:ingredients ingredients :instruction instruction :reference reference 
@@ -30,23 +18,12 @@
 (defun add-herb-formula (herb-formula) (push herb-formula *herb-formula-db*))
 ; ingredients are list of (("Herb name" doze) ("MaHuang" 2)...)
 
-(defvar *herb-formula-db*
-'(
-  (:name "Sheng Ma Tang" 
-   :indications (:effective ("bleeding tongue" "tongue hole" "tongue spike")
-		 :must-have ()
-		 :general ("tongue" "heart fire"))
-   :contraindications ()
-   :ingredients (("Sheng Ma" 15) ("Xian Ji Gen" 15) ("Xi Gen" 15) ("Ai Ye" 7.5) ("Hang Shui Shi" 30) ("Sheng Di" 5))
-   :instruction "Power them and take 3 Qin with 1 teaspoon of Shen Di juice. Rubbing with Bi Xing Sen"
-   :reference "Yi Zhong Jin Gan"
-   :rating 8 :freq 0 :comment "")
-))
 
 (defvar *point-db* nil)
-(defun make-point (name type location danger indications contraindications rating freq comment)
+(defun make-point (name type location danger indications contraindications instruction reference rating freq comment)
   (list :name name :type type :location location :danger danger 
 	:indications indications :contraindications contraindications
+	:instruction instruction :reference reference
 	:rating rating :freq freq :comment comment))
 (defun add-point (point) (push point *point-db*))
 (defun make-indications (effective must-have general)
@@ -83,16 +60,6 @@
   (load-db '*herb-db* filename))
 
 
-(defun prompt-for-cd ()
-  (make-cd
-   (prompt-read "Title")
-   (prompt-read "Artist")
-   (or (parse-integer (prompt-read "Rating") :junk-allowed t) 0)
-   (y-or-n-p "Ripped [y/n]: ")))
-(defun add-cds ()
-  (loop (add-record (prompt-for-cd))
-      (if (not (y-or-n-p "Another? [y/n]: ")) (return))))
-
 (defun prompt-for-indications ()
   (make-indications
    (prompt-read-list "Effective")
@@ -106,6 +73,8 @@
    (prompt-read-list "Danger")
    (prompt-for-indications)
    (prompt-read-list "Contraindications")
+   (prompt-read "Instruction")
+   (prompt-read "Reference")
    (or (parse-integer (prompt-read "Rating") :junk-allowed t) 0)
    (or (parse-integer (prompt-read "Frequency") :junk-allowed t) 0)
    (prompt-read "Comment")))
@@ -131,9 +100,9 @@
   (loop for x in (select db selector-fn)
     collect (getf x field)))
 
-
-(union '(a b) '(b c))
-(intersection '(a b) '(b c))
+; for future ref
+;(union '(a b) '(b c))
+;(intersection '(a b) '(b c))
 
 (defun get-name (herb-doze)
   (car herb-doze))
@@ -148,182 +117,16 @@
       (format t "~a:~20t~5,1f~%" (get-name hd) (float (* (get-doze hd) s))))
     (format t "~a:~20t~5,1f~%" "Total" a)))
 
-(calc-herb '((a 1) (b 2) (c 3)) 6 2 5)
-(calc-herb '(("MaHuang" 10) ("GuiZhi" 10) ("ZhiGanCao" 10)) 6 2 5)
+;example usage
+;(calc-herb '((a 1) (b 2) (c 3)) 6 2 5)
+;(calc-herb '(("MaHuang" 10) ("GuiZhi" 10) ("ZhiGanCao" 10)) 6 2 5)
 
 (defun get-herb-formula (name)
   (car (select *herb-formula-db* (name-selector name))))
 (defun calc-herb-formula (name g-per-day times-per-day num-days)
   (calc-herb (getf (get-herb-formula name) :ingredients) g-per-day times-per-day num-days))
 
-(calc-herb-formula "Ma Huang Tang" 6 2 10)
-(calc-herb-formula "Gui Zhi Tang" 6 2 10)
+;example usage
+;(calc-herb-formula "Ma Huang Tang" 6 2 10)
+;(calc-herb-formula "Gui Zhi Tang" 6 2 10)
 
-(defvar *5elements-db* nil)
-(setf *5elements-db* '(
-		       (:name "Wood" :property '("life" "excite"))
-		       (:name "Fire" :property '("change" "movement"))
-		       (:name "Earth" :property '("give birth" "nurture"))
-		       (:name "Metal" :property '("regulate" "rule"))
-		       (:name "Water" :property '("hidden" "end"))))
-
-(defvar *Trigram* '(Qian Kun Zhen Xun Kan Li Gen Dui))
-(defvar *Trigram-db* 
-  '((:name Qian 
-     :yin-yang Yang 
-     :5elements Metal 
-     :nature Sky 
-     :season Autumn-Winter 
-     :direction NW 
-     :animal Horse 
-     :family "Father" 
-     :body Head 
-     :tendency '(Strong-Move) 
-     :weather Sunny 
-     :organ '(LI) 
-     :ZhiQi NaDong 
-     :color '(red) 
-     :others '("nation" "king" "jade" "gold" "cold" "ice" "wood-fruit")
-     :indications '("head" "chest" "bone pain" "harden" "chronic" "wind-cold" 
-		    "abnormal change" "acute" "blockage" "constipation" "nerve" "stroke"))
-    (:name Kun 
-     :yin-yang Yin 
-     :5elements Earth 
-     :nature Earth 
-     :season Summer-Autumn 
-     :direction SW 
-     :animal Cow 
-     :family "Mother" 
-     :body Abdomen 
-     :tendency '(Follow Gental Stingy) 
-     :weather Cloud 
-     :organ '(SP) 
-     :ZhiQi NaChao 
-     :color '(black-soil) 
-     :others '("cloth" "axe" "car" "text" "crowd" "handle")
-     :indications '("abdomen" "GI" "digestion" "swollen" "dampness" "skin" "blister" 
-		    "faint" "fatique" "chronic" "middle Qi deficient" "cancer"
-		    "muscle weakness" "distension" "serious severe disease" "dieing"))
-    (:name Zhen 
-     :yin-yang Yang 
-     :5elements Wood 
-     :nature Thunder 
-     :season Spring 
-     :direction E 
-     :animal Dragon 
-     :family "Eldest Son" 
-     :body Leg 
-     :tendency '(Start-Move Give Decisive) 
-     :weather Thunder 
-     :organ '(LIV) 
-     :ZhiQi ChungFan 
-     :color '(black-yellow) 
-     :others '("big road" "young bamboo" "root-fruit" "pennut" "yam" "potato")
-     :indications '("emotion" "mental" "manic" "sensitive" "epilapsy" "nervious" "hyeractive" 
-		    "lady problem" "liver fire" "pain" "swollen leg" "tramma" "acute" 
-		    "servere" "cough" "vocal" "throat" "liver" "fatty liver" "hepititis"))
-    (:name Xun 
-     :yin-yang Yin 
-     :5elements Wood 
-     :nature Wind 
-     :season Spring-Summer 
-     :direction SE 
-     :animal Chicken 
-     :family "Eldest Daughter" 
-     :body Buttock 
-     :tendency '(inward) 
-     :weather Wind 
-     :organ '(GB) 
-     :ZhiQi NaXia 
-     :color '(white)
-     :others '("vertial rob" "work" "long" "high" "advance" "drawback" "no fruit" "odor" 
-	       "bold" "white eye")
-     :indications '("wind" "stroke" "emotion" "mental" "gall bladder" "infection" "sciatia" 
-		    "lymph" 
-		    "cramp" "stiff" "unstable" "dyspnea" "asthema" "left shoulder pain"
-		    "nerve inflammation" "hip pain" "chest distention" "drunk" 
-		    "abdomen distention" "depression" 
-		    "blood vessel" "gall stone" "gall bladder infection" "bile duct"))
-    (:name Kan 
-     :yin-yang Yang 
-     :5elements Water 
-     :nature Water 
-     :season Winter 
-     :direction N 
-     :animal Pig 
-     :family "Middle Son" 
-     :body Ear 
-     :tendency '(descend danger hide gental-beautiful worry) 
-     :weather Rain 
-     :organ '(K BL) 
-     :ZhiQi DongZhi 
-     :color '()
-     :others '("sewage" "car" "bed" "moon" "steal") 
-     :indications '("ear pain" "heart pain" "blood" "urinary tract" "bladder" 
-		    "kidney deficiency diarrhea" "DM" 
-		    "bleeding" "immune system" "STD" 
-		    "spermachorrea" "genital" "toxic" "virus" "back" "heart" "fatique" 
-		    "cold" "severe" "swollen"))
-    (:name Li 
-     :yin-yang Yin 
-     :5elements Fire 
-     :nature Fire 
-     :season Summer 
-     :direction S 
-     :animal MaleChicken 
-     :family "Middle Daughter" 
-     :body Eye 
-     :tendency '(beautiful rely attach) 
-     :weather Sunny 
-     :organ '(H SI) 
-     :ZhiQi XiaZhi 
-     :color '()
-     :others '("sun" "electricity" "helmet" "war" "big tommy" "bei jia" "crab" "skinny" 
-	       "clam" "fish")
-     :indications '("eye" "heart" "halusination" "burn" "sun stroke" "radiation" "breast" 
-		    "inflammation" "heat" "fever" "yellow urine" "blood" 
-		    "spread" "enlargement" "lady problem"))
-    (:name Gen 
-     :yin-yang Yang 
-     :5elements Earth 
-     :nature Mountain 
-     :season Winter-Spring 
-     :direction NE 
-     :animal Dog 
-     :family "Youngest Son" 
-     :body Hand 
-     :tendency '(stop) 
-     :weather Foggy 
-     :organ '(ST) 
-     :ZhiQi Spring 
-     :color '()
-     :others '("small road" "small stone" "melon" "temple" "finger" "mice")
-     :indications '("Stomach" "no appetite" "distension" "nose" "hand" "leg" "back" 
-		    "numbness" "joint" 
-		    "blood stasis" "blister" "skin" "hard swollen"
-		    "swollen upward inflammation" "wierd" "malnutritient" "tumor" "cancer" 
-		    "stone" "poor circulation"))
-    (:name Dui 
-     :yin-yang Yin 
-     :5elements Metal 
-     :nature Swam 
-     :season Autumn 
-     :direction W 
-     :animal Sheep 
-     :family "Yongest Daughter" 
-     :body Mouth 
-     :tendency '(joy break) 
-     :weather Rain 
-     :organ LU 
-     :ZhiQi ChauFan 
-     :color '()
-     :others '("fortune teller" "tongue" "drop fruit" "dry land")
-     :indications '("mouth" "teeth" "tongue" "throat" "cough" "dyspnea" "chest distension" 
-		    "Lung" "poor appetite" 
-		    "Bladder" "urinary tract openning" "anus" "STD" "low blood pressure" 
-		    "shortness of breath" 
-		    "anemia" "external injury" "mild" "skin" "head injury" "bronchial"))
-))
-
-; example use
-(selectf *Trigram-db* (indications-selector "blood") :organ)
