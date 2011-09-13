@@ -22,19 +22,26 @@
 	:rating rating :freq freq :comment comment))
 (defun add-herb (herb) (push herb *herb-db*))
 
-(defvar *herb-formula-db* nil)
-(defun make-herb-formula (name indications contraindications ingredients rating freq comment)
+
+(defun make-herb-formula (name indications contraindications ingredients instruction reference rating freq comment)
   (list :name name :indications indications :contraindications contraindications
-	:ingredients ingredients :rating rating :freq freq :comment comment))
+	:ingredients ingredients :instruction instruction :reference reference 
+	:rating rating :freq freq :comment comment))
 (defun add-herb-formula (herb-formula) (push herb-formula *herb-formula-db*))
 ; ingredients are list of (("Herb name" doze) ("MaHuang" 2)...)
 
-(add-herb-formula (make-herb-formula "Gui Zhi Tang" 
-				     '(:effective () :must-have ("headache" "feeling cold" "sweat") :general ("Tai Yang Bing")) '("no sweat")
-				     '(("Gui Zhi" 6) ("Bai Shao" 6) ("Sheng Jiang" 4) ("Zhi Gan Cao" 4) ("Dai Zao" 4)) 9 0 ""))
-(add-herb-formula (make-herb-formula "Ma Huang Tang" 
-				     '(:effective () :must-have ("headache" "feeling cold" "no sweat") :general ("Tai Yang Bing")) '("sweat")
-				     '(("Ma Huang" 4) ("Gui Zhi" 6) ("Xing Ren" 3) ("Zhi Gan Cao" 4)) 9 0 ""))
+(defvar *herb-formula-db*
+'(
+  (:name "Sheng Ma Tang" 
+   :indications (:effective ("bleeding tongue" "tongue hole" "tongue spike")
+		 :must-have ()
+		 :general ("tongue" "heart fire"))
+   :contraindications ()
+   :ingredients (("Sheng Ma" 15) ("Xian Ji Gen" 15) ("Xi Gen" 15) ("Ai Ye" 7.5) ("Hang Shui Shi" 30) ("Sheng Di" 5))
+   :instruction "Power them and take 3 Qin with 1 teaspoon of Shen Di juice. Rubbing with Bi Xing Sen"
+   :reference "Yi Zhong Jin Gan"
+   :rating 8 :freq 0 :comment "")
+))
 
 (defvar *point-db* nil)
 (defun make-point (name type location danger indications contraindications rating freq comment)
@@ -120,6 +127,9 @@
        (if (or (if (typep x 'list) (contains name x))
 	   (if (equal x name) 'T)) 
 	   (return 'T))))
+(defun selectf (db selector-fn field)
+  (loop for x in (select db selector-fn)
+    collect (getf x field)))
 
 
 (union '(a b) '(b c))
@@ -157,63 +167,163 @@
 		       (:name "Metal" :property '("regulate" "rule"))
 		       (:name "Water" :property '("hidden" "end"))))
 
-(defvar *Trigrams* '(Qian Kun Zhen Xun Kan Li Gen Dui))
-(defvar *Trigrams-db* 
-  '((:name Qian :yin-yang Yang :5elements Metal 
-     :nature Sky :season Autumn-Winter :direction NW :animal Horse :family "Father" :body Head 
-     :tendency '(Strong-Move) :weather Sunny :organ '(LI) :ZhiQi NaDong :color '(red) 
-     :others '("nation" "King" "Jade" "Gold" "Cold" "Ice" "Wood-Fruit")
-     :diseases '("head" "chest" "bone pain" "harden" "chronic" "wind-cold" "abnormal change" "acute" "blockage" 
-		 "constipation" "nerve" "stroke"))
-    (:name Kun :yin-yang Yin :5elements Earth 
-     :nature Earth :season Summer-Autumn :direction SW :animal Cow :family "Mother" :body Abdomen 
-     :tendency '(Follow Gental Stingy) :weather Cloud :organ '(SP) :ZhiQi NaChao :color '(black-soil) 
+(defvar *Trigram* '(Qian Kun Zhen Xun Kan Li Gen Dui))
+(defvar *Trigram-db* 
+  '((:name Qian 
+     :yin-yang Yang 
+     :5elements Metal 
+     :nature Sky 
+     :season Autumn-Winter 
+     :direction NW 
+     :animal Horse 
+     :family "Father" 
+     :body Head 
+     :tendency '(Strong-Move) 
+     :weather Sunny 
+     :organ '(LI) 
+     :ZhiQi NaDong 
+     :color '(red) 
+     :others '("nation" "king" "jade" "gold" "cold" "ice" "wood-fruit")
+     :indications '("head" "chest" "bone pain" "harden" "chronic" "wind-cold" 
+		    "abnormal change" "acute" "blockage" "constipation" "nerve" "stroke"))
+    (:name Kun 
+     :yin-yang Yin 
+     :5elements Earth 
+     :nature Earth 
+     :season Summer-Autumn 
+     :direction SW 
+     :animal Cow 
+     :family "Mother" 
+     :body Abdomen 
+     :tendency '(Follow Gental Stingy) 
+     :weather Cloud 
+     :organ '(SP) 
+     :ZhiQi NaChao 
+     :color '(black-soil) 
      :others '("cloth" "axe" "car" "text" "crowd" "handle")
-     :diseases '("abdomen" "GI" "digestion" "swollen" "dampness" "skin" "blister" "faint" "fatique" "chronic" 
-		 "middle Qi deficient" "cancer"
-		 "weak muscle" "distension" "serious severe disease" "dieing"))
-    (:name Zhen :yin-yang Yang :5elements Wood 
-     :nature Thunder :season Spring :direction E :animal Dragon :family "Eldest Son" :body Leg 
-     :tendency '(Start-Move Give Decisive) :weather Thunder :organ '(LIV) :ZhiQi ChungFan :color '(black-yellow) 
+     :indications '("abdomen" "GI" "digestion" "swollen" "dampness" "skin" "blister" 
+		    "faint" "fatique" "chronic" "middle Qi deficient" "cancer"
+		    "muscle weakness" "distension" "serious severe disease" "dieing"))
+    (:name Zhen 
+     :yin-yang Yang 
+     :5elements Wood 
+     :nature Thunder 
+     :season Spring 
+     :direction E 
+     :animal Dragon 
+     :family "Eldest Son" 
+     :body Leg 
+     :tendency '(Start-Move Give Decisive) 
+     :weather Thunder 
+     :organ '(LIV) 
+     :ZhiQi ChungFan 
+     :color '(black-yellow) 
      :others '("big road" "young bamboo" "root-fruit" "pennut" "yam" "potato")
-     :diseases '("mental" "manic" "sensitive" "epilapsy" "nervious" "hyeractive" "lady problem" 
-		 "liver fire" "pain" "swollen leg" "tramma" "acute" 
-		 "servere" "cough" "vocal" "throat" "liver" "fatty liver" "hepititis"))
-    (:name Xun :yin-yang Yin :5elements Wood 
-     :nature Wind :season Spring-Summer :direction SE :animal Chicken :family "Eldest Daughter" :body Buttock 
-     :tendency '(inward) :weather Wind :organ '(GB) :ZhiQi NaXia :color '(white)
-     :others '("vertial rob" "work" "long" "high" "advance" "drawback" "no fruit" "odor" "bold" "white eye")
-     :diseases '("wind" "stroke" "mental" "gall bladder" "infection" "sciatia" "lymph" "cramp" "stiff" 
-		 "unstable" "dyspnea" "asthema" "left shoulder pain"
-		 "nerve inflammation" "hip pain" "chest distention" "drunk" "abdomen distention" "depression" 
-		 "blood vessel" "gall stone" "gall bladder infection" "bile duct"))
-    (:name Kan :yin-yang Yang :5elements Water 
-     :nature Water :season Winter :direction N :animal Pig :family "Middle Son" :body Ear 
-     :tendency '(descend danger hide gental-beautiful worry) :weather Rain :organ '(K BL) :ZhiQi DongZhi :color '()
+     :indications '("emotion" "mental" "manic" "sensitive" "epilapsy" "nervious" "hyeractive" 
+		    "lady problem" "liver fire" "pain" "swollen leg" "tramma" "acute" 
+		    "servere" "cough" "vocal" "throat" "liver" "fatty liver" "hepititis"))
+    (:name Xun 
+     :yin-yang Yin 
+     :5elements Wood 
+     :nature Wind 
+     :season Spring-Summer 
+     :direction SE 
+     :animal Chicken 
+     :family "Eldest Daughter" 
+     :body Buttock 
+     :tendency '(inward) 
+     :weather Wind 
+     :organ '(GB) 
+     :ZhiQi NaXia 
+     :color '(white)
+     :others '("vertial rob" "work" "long" "high" "advance" "drawback" "no fruit" "odor" 
+	       "bold" "white eye")
+     :indications '("wind" "stroke" "emotion" "mental" "gall bladder" "infection" "sciatia" 
+		    "lymph" 
+		    "cramp" "stiff" "unstable" "dyspnea" "asthema" "left shoulder pain"
+		    "nerve inflammation" "hip pain" "chest distention" "drunk" 
+		    "abdomen distention" "depression" 
+		    "blood vessel" "gall stone" "gall bladder infection" "bile duct"))
+    (:name Kan 
+     :yin-yang Yang 
+     :5elements Water 
+     :nature Water 
+     :season Winter 
+     :direction N 
+     :animal Pig 
+     :family "Middle Son" 
+     :body Ear 
+     :tendency '(descend danger hide gental-beautiful worry) 
+     :weather Rain 
+     :organ '(K BL) 
+     :ZhiQi DongZhi 
+     :color '()
      :others '("sewage" "car" "bed" "moon" "steal") 
-     :diseases '("ear pain" "heart pain" "blood" "urinary tract" "bladder" "kidney deficiency diarrhea" "DM" 
-		 "bleeding" "immune system" "STD" 
-		 "spermachorrea" "genital" "toxic" "virus" "back" "heart" "fatique" "cold" "severe" "swollen"))
-    (:name Li :yin-yang Yin :5elements Fire 
-     :nature Fire :season Summer :direction S :animal MaleChicken :family "Middle Daughter" :body Eye 
-     :tendency '(beautiful rely attach) :weather Sunny :organ '(H SI) :ZhiQi XiaZhi :color '()
-     :others '("sun" "electricity" "helmet" "war" "big tommy" "bei jia" "crab" "skinny" "clam" "fish")
-     :diseases '("eye" "heart" "halusination" "burn" "sun stroke" "radiation" "breast" "inflammation" "heat" 
-		 "fever" "yellow urine" "blood" 
-		 "spread" "enlargement" "lady problem"))
-    (:name Gen :yin-yang Yang :5elements Earth 
-     :nature Mountain :season Winter-Spring :direction NE :animal Dog :family "Youngest Son" :body Hand 
-     :tendency '(stop) :weather Foggy :organ '(ST) :ZhiQi Spring :color '()
+     :indications '("ear pain" "heart pain" "blood" "urinary tract" "bladder" 
+		    "kidney deficiency diarrhea" "DM" 
+		    "bleeding" "immune system" "STD" 
+		    "spermachorrea" "genital" "toxic" "virus" "back" "heart" "fatique" 
+		    "cold" "severe" "swollen"))
+    (:name Li 
+     :yin-yang Yin 
+     :5elements Fire 
+     :nature Fire 
+     :season Summer 
+     :direction S 
+     :animal MaleChicken 
+     :family "Middle Daughter" 
+     :body Eye 
+     :tendency '(beautiful rely attach) 
+     :weather Sunny 
+     :organ '(H SI) 
+     :ZhiQi XiaZhi 
+     :color '()
+     :others '("sun" "electricity" "helmet" "war" "big tommy" "bei jia" "crab" "skinny" 
+	       "clam" "fish")
+     :indications '("eye" "heart" "halusination" "burn" "sun stroke" "radiation" "breast" 
+		    "inflammation" "heat" "fever" "yellow urine" "blood" 
+		    "spread" "enlargement" "lady problem"))
+    (:name Gen 
+     :yin-yang Yang 
+     :5elements Earth 
+     :nature Mountain 
+     :season Winter-Spring 
+     :direction NE 
+     :animal Dog 
+     :family "Youngest Son" 
+     :body Hand 
+     :tendency '(stop) 
+     :weather Foggy 
+     :organ '(ST) 
+     :ZhiQi Spring 
+     :color '()
      :others '("small road" "small stone" "melon" "temple" "finger" "mice")
-     :diseases '("Stomach" "no appetite" "distension" "nose" "hand" "leg" "back" "numbness" "joint" 
-		 "blood stasis" "blister" "skin" "hard swollen"
-		 "swollen upward inflammation" "wierd" "malnutritient" "tumor" "cancer" "stone" "poor circulation"))
-    (:name Dui :yin-yang Yin :5elements Metal 
-     :nature Swam :season Autumn :direction W :animal Sheep :family "Yongest Daughter" :body Mouth 
-     :tendency '(joy break) :weather Rain :organ LU :ZhiQi ChauFan :color '()
+     :indications '("Stomach" "no appetite" "distension" "nose" "hand" "leg" "back" 
+		    "numbness" "joint" 
+		    "blood stasis" "blister" "skin" "hard swollen"
+		    "swollen upward inflammation" "wierd" "malnutritient" "tumor" "cancer" 
+		    "stone" "poor circulation"))
+    (:name Dui 
+     :yin-yang Yin 
+     :5elements Metal 
+     :nature Swam 
+     :season Autumn 
+     :direction W 
+     :animal Sheep 
+     :family "Yongest Daughter" 
+     :body Mouth 
+     :tendency '(joy break) 
+     :weather Rain 
+     :organ LU 
+     :ZhiQi ChauFan 
+     :color '()
      :others '("fortune teller" "tongue" "drop fruit" "dry land")
-     :diseases '("mouth" "teeth" "tongue" "throat" "cough" "dyspnea" "chest distension" "Lung" "poor appetite" 
-		 "Bladder" "urinary tract openning" "anus" "STD" "low blood pressure" "shortness of breath" 
-		 "anemia" "external injury" "mild" "skin" "head injury" "bronchial"))
+     :indications '("mouth" "teeth" "tongue" "throat" "cough" "dyspnea" "chest distension" 
+		    "Lung" "poor appetite" 
+		    "Bladder" "urinary tract openning" "anus" "STD" "low blood pressure" 
+		    "shortness of breath" 
+		    "anemia" "external injury" "mild" "skin" "head injury" "bronchial"))
 ))
 
+; example use
+(selectf *Trigram-db* (indications-selector "blood") :organ)
