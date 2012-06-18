@@ -1,0 +1,42 @@
+(
+  (:name "Sheng Ma Tang" 
+   :indications (:effective ("bleeding tongue" "tongue hole" "tongue spike")
+		 :must-have ()
+		 :general ("tongue" "heart fire"))
+   :contraindications ()
+   :ingredients (("Sheng Ma" 15) ("Xian Ji Gen" 15) ("Xi Gen" 15) ("Ai Ye" 7.5) ("Hang Shui Shi" 30) ("Sheng Di" 5))
+   :instruction "Powder them and take 3 Qin with 1 teaspoon of Shen Di juice. Rubbing with Bi Xing Sen"
+   :reference "Yi Zhong Jin Gan"
+   :rating 8 :freq 0 :comment "")
+  (:name "Gui Zhi Tang" 
+   :indications (:effective ("wind-cold" "irritable after sweating")
+		 :must-have ("sweating" :pulse '("floating" "weak"))
+		 :general ("headache" "nape pain" "fever" "avoid wind" 
+			"Tai Yang Bing" "Yin Wei disharmony" "superficial"))
+   :contraindications ("no sweating")
+   :ingredients (("Gui Zhi" 3) ("Bai Shao" 3) ("Sheng Jiang" 3) 
+			("Zhi Gan Cao" 3) ("Da Zao" 3))
+   :instruction "Take congee afterward, cover up to get mild sweating over whole body"
+   :reference "Sheng Han Lun"
+   :rating 10 :freq 0 :comment "")
+  (:name "Xiao Chai Hu Tang" 
+   :indications (:effective ("Shao Yang" "vomit" "alternate chill and fever")
+		 :must-have ("alternate chill and fever"))
+		 :general ("bitter taste" "dry throat" "dizzy" "blur eyes" "temporal headache"))
+   :contraindications ("")
+   :ingredients (("Chai Hu" 3) ("Huang Qian" 3) ("Dang Shen" 3) ("Ban Xia" 3) ("Sheng Jiang" 3) ("Zhi Gan Cao" 3) ("Da Zao" 3))
+   :instruction ""
+   :reference "Sheng Han Lun"
+   :rating 10 :freq 0 :comment "")
+  (:name "Sheng Jia Tang" 
+   :indications (:effective ("wind-cold" "nutritive deficient" "body pain" 
+				"limb pain")
+		 :must-have ()
+		 :general ("Tai Yang Bing" "superficial"))
+   :contraindications ("no sweating")
+   :ingredients (("Gui Zhi" 3) ("Bai Shao" 6) ("Sheng Jiang" 6) 
+			("Zhi Gan Cao" 9) ("Da Zao" 3) ("Ren Sheng" 3))
+   :instruction ""
+   :reference "Sheng Han Lun"
+   :rating 10 :freq 0 :comment "")
+)
